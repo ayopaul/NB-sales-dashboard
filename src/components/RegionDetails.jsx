@@ -53,9 +53,9 @@ const RegionDetails = ({ region, regionData, open, onOpenChange }) => {
                 <MapPin className="w-6 h-6 text-white" />
               </div>
               <div className="flex-1 min-w-0">
-                <SheetTitle className="text-xl">{region}</SheetTitle>
+                <SheetTitle className="text-xl">{zone?.name} Zone</SheetTitle>
                 <SheetDescription className="flex items-center gap-2 mt-1">
-                  <span>{zone?.name} Zone</span>
+                  <span>{region}</span>
                   <span>•</span>
                   <span>{states.length} States</span>
                 </SheetDescription>

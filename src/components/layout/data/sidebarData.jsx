@@ -1,13 +1,10 @@
 import {
   LayoutDashboard,
-  Map,
-  BarChart3,
   Package,
   TrendingUp,
   Settings,
   HelpCircle,
-  Users,
-  FileText,
+  Upload,
 } from 'lucide-react';
 
 export const sidebarData = {
@@ -38,16 +35,6 @@ export const sidebarData = {
           isActive: true,
         },
         {
-          title: 'Map View',
-          url: '/map',
-          icon: Map,
-        },
-        {
-          title: 'Analytics',
-          url: '/analytics',
-          icon: BarChart3,
-        },
-        {
           title: 'Brands',
           url: '/brands',
           icon: Package,
@@ -60,17 +47,12 @@ export const sidebarData = {
       ],
     },
     {
-      title: 'Reports',
+      title: 'Data',
       items: [
         {
-          title: 'Sales Reports',
-          url: '/reports/sales',
-          icon: FileText,
-        },
-        {
-          title: 'Regional Reports',
-          url: '/reports/regional',
-          icon: Users,
+          title: 'Upload Data',
+          url: '/upload',
+          icon: Upload,
         },
       ],
     },
@@ -85,10 +67,6 @@ export const sidebarData = {
             {
               title: 'Profile',
               url: '/settings/profile',
-            },
-            {
-              title: 'Account',
-              url: '/settings/account',
             },
             {
               title: 'Appearance',

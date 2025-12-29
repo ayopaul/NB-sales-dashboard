@@ -41,7 +41,7 @@ export function OverviewChart({ data }) {
           tickLine={false}
           axisLine={false}
           tickMargin={8}
-          tickFormatter={(value) => `₦${(value / 1000000).toFixed(1)}M`}
+          tickFormatter={(value) => `${(value / 1000000).toFixed(1)}M hL`}
           className="text-xs fill-muted-foreground"
           width={60}
         />

@@ -79,7 +79,7 @@ export const SalesTrendChart = ({ data, height = 300 }) => {
           tick={{ fill: isDark ? '#6b7280' : '#9ca3af', fontSize: 11 }}
           axisLine={false}
           tickLine={false}
-          tickFormatter={(value) => `₦${(value / 1000).toFixed(0)}k`}
+          tickFormatter={(value) => `${(value / 1000).toFixed(0)}k hL`}
           tickMargin={8}
           width={50}
         />
@@ -106,7 +106,7 @@ export const SalesTrendChart = ({ data, height = 300 }) => {
 };
 
 // Brand Distribution Pie Chart
-export const BrandDistributionChart = ({ data, height = 300 }) => {
+export const BrandDistributionChart = ({ data, height = 200 }) => {
   const { isDark } = useTheme();
 
   const chartData = brands
@@ -120,20 +120,28 @@ export const BrandDistributionChart = ({ data, height = 300 }) => {
     .sort((a, b) => b.value - a.value)
     .slice(0, 6);
 
-  const chartConfig = chartData.reduce((acc, item) => {
-    acc[item.name] = { label: item.name, color: item.color };
-    return acc;
-  }, {});
+  const CustomTooltip = ({ active, payload }) => {
+    if (active && payload && payload.length) {
+      const item = payload[0];
+      return (
+        <div className="bg-popover text-popover-foreground border border-border rounded-lg px-3 py-2 shadow-lg">
+          <p className="font-medium text-sm">{item.name}</p>
+          <p className="text-muted-foreground text-xs">{formatCurrency(item.value)}</p>
+        </div>
+      );
+    }
+    return null;
+  };
 
   return (
-    <ChartContainer config={chartConfig} className="w-full" style={{ height }}>
-      <PieChart>
+    <div style={{ height }}>
+      <PieChart width={280} height={height - 50}>
         <Pie
           data={chartData}
           cx="50%"
           cy="50%"
-          innerRadius={55}
-          outerRadius={90}
+          innerRadius={40}
+          outerRadius={65}
           paddingAngle={2}
           dataKey="value"
           nameKey="name"
@@ -142,21 +150,20 @@ export const BrandDistributionChart = ({ data, height = 300 }) => {
             <Cell key={`cell-${index}`} fill={entry.color} />
           ))}
         </Pie>
-        <ChartTooltip
-          content={
-            <ChartTooltipContent
-              formatter={(value) => formatCurrency(value)}
-            />
-          }
-        />
-        <ChartLegend
-          content={<ChartLegendContent nameKey="name" />}
-          layout="vertical"
-          align="right"
-          verticalAlign="middle"
-        />
+        <ChartTooltip content={<CustomTooltip />} />
       </PieChart>
-    </ChartContainer>
+      <div className="flex flex-wrap justify-center gap-x-3 gap-y-1 mt-1">
+        {chartData.map((entry, index) => (
+          <div key={`legend-${index}`} className="flex items-center gap-1.5">
+            <div
+              className="w-2 h-2 rounded-sm flex-shrink-0"
+              style={{ backgroundColor: entry.color }}
+            />
+            <span className="text-[10px] text-muted-foreground">{entry.name}</span>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 };
 
@@ -213,7 +220,7 @@ export const RegionalComparisonChart = ({ data, height = 300 }) => {
           tick={{ fill: isDark ? '#6b7280' : '#9ca3af', fontSize: 11 }}
           axisLine={false}
           tickLine={false}
-          tickFormatter={(value) => `₦${(value / 1000).toFixed(0)}k`}
+          tickFormatter={(value) => `${(value / 1000).toFixed(0)}k hL`}
           tickMargin={8}
           width={50}
         />
@@ -276,7 +283,7 @@ export const ZonePerformanceChart = ({ data, height = 200 }) => {
           tick={{ fill: isDark ? '#6b7280' : '#9ca3af', fontSize: 11 }}
           axisLine={false}
           tickLine={false}
-          tickFormatter={(value) => `₦${(value / 1000000).toFixed(1)}M`}
+          tickFormatter={(value) => `${(value / 1000000).toFixed(1)}M hL`}
           tickMargin={8}
         />
         <YAxis

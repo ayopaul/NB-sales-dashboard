@@ -271,14 +271,13 @@ export const calculateZoneTotals = (regionData) => {
   return zoneTotals;
 };
 
-// Format currency (Nigerian Naira)
+// Format volume (Hectolitre)
 export const formatCurrency = (value) => {
-  return new Intl.NumberFormat('en-NG', {
-    style: 'currency',
-    currency: 'NGN',
+  const formatted = new Intl.NumberFormat('en-NG', {
     minimumFractionDigits: 0,
     maximumFractionDigits: 0
   }).format(value);
+  return `${formatted} hL`;
 };
 
 // Format number with commas

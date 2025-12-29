@@ -33,7 +33,7 @@ export function ZonePerformance({ data }) {
             type="number"
             tickLine={false}
             axisLine={false}
-            tickFormatter={(value) => `₦${(value / 1000000).toFixed(1)}M`}
+            tickFormatter={(value) => `${(value / 1000000).toFixed(1)}M hL`}
             className="text-xs fill-muted-foreground"
           />
           <YAxis

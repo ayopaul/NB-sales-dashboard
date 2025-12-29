@@ -1,3 +1,4 @@
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from '@/context/ThemeContext';
 import { LayoutProvider } from '@/context/LayoutContext';
 import { SearchProvider } from '@/context/SearchContext';
@@ -6,6 +7,11 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import { AppSidebar } from '@/components/layout/AppSidebar';
 import CommandMenu from '@/components/layout/CommandMenu';
 import Dashboard from '@/features/dashboard';
+import Brands from '@/features/brands';
+import Trends from '@/features/trends';
+import UploadData from '@/features/upload';
+import ProfileSettings from '@/features/settings/profile';
+import AppearanceSettings from '@/features/settings/appearance';
 
 function AppContent() {
   const defaultOpen = typeof window !== 'undefined'
@@ -16,7 +22,14 @@ function AppContent() {
     <SidebarProvider defaultOpen={defaultOpen}>
       <AppSidebar />
       <SidebarInset>
-        <Dashboard />
+        <Routes>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/brands" element={<Brands />} />
+          <Route path="/trends" element={<Trends />} />
+          <Route path="/upload" element={<UploadData />} />
+          <Route path="/settings/profile" element={<ProfileSettings />} />
+          <Route path="/settings/appearance" element={<AppearanceSettings />} />
+        </Routes>
       </SidebarInset>
     </SidebarProvider>
   );
@@ -24,16 +37,18 @@ function AppContent() {
 
 function App() {
   return (
-    <ThemeProvider>
-      <TooltipProvider>
-        <SearchProvider>
-          <LayoutProvider>
-            <AppContent />
-            <CommandMenu />
-          </LayoutProvider>
-        </SearchProvider>
-      </TooltipProvider>
-    </ThemeProvider>
+    <BrowserRouter>
+      <ThemeProvider>
+        <TooltipProvider>
+          <SearchProvider>
+            <LayoutProvider>
+              <AppContent />
+              <CommandMenu />
+            </LayoutProvider>
+          </SearchProvider>
+        </TooltipProvider>
+      </ThemeProvider>
+    </BrowserRouter>
   );
 }
 

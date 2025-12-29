@@ -63,6 +63,7 @@ const NigeriaMap = ({
   const [hoveredState, setHoveredState] = useState(null);
   const [hoveredRegion, setHoveredRegion] = useState(null);
   const [localSelectionMode, setLocalSelectionMode] = useState(selectionMode);
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 
   // Calculate max sales for opacity scaling
   const maxSales = useMemo(() => {
@@ -127,10 +128,27 @@ const NigeriaMap = ({
     }
   };
 
-  const handleStateHover = (state) => {
+  const handleStateHover = (state, event) => {
     setHoveredState(state);
     if (localSelectionMode === 'region') {
       setHoveredRegion(stateToRegion[state]);
+    }
+    if (event) {
+      const rect = event.currentTarget.closest('svg').parentElement.getBoundingClientRect();
+      setMousePosition({
+        x: event.clientX - rect.left,
+        y: event.clientY - rect.top
+      });
+    }
+  };
+
+  const handleMouseMove = (event) => {
+    if (hoveredState) {
+      const rect = event.currentTarget.getBoundingClientRect();
+      setMousePosition({
+        x: event.clientX - rect.left,
+        y: event.clientY - rect.top
+      });
     }
   };
 
@@ -209,90 +227,92 @@ const NigeriaMap = ({
         )}
       </div>
 
-      <svg
-        viewBox={mapViewBox}
-        className="w-full h-auto"
-        style={{ maxHeight: '350px' }}
-        preserveAspectRatio="xMidYMid meet"
-      >
-        {/* Background */}
-        <rect
-          x="0"
-          y="0"
-          width="744.24182"
-          height="599.92847"
-          fill={isDark ? 'hsl(222.2 84% 4.9%)' : 'hsl(210 40% 98%)'}
-          rx="12"
-        />
-
-        {/* Map paths */}
-        {Object.entries(nigeriaStatePaths).map(([stateName, { d, id }]) => {
-          const region = stateToRegion[stateName];
-          const isInSelectedRegion = selectedRegion === region;
-          const isInHoveredRegion = localSelectionMode === 'region' && hoveredRegion === region;
-
-          return (
-            <path
-              key={id}
-              d={d}
-              fill={getStateColor(stateName)}
-              stroke={isDark ? 'hsl(222.2 84% 4.9%)' : '#ffffff'}
-              strokeWidth={isInSelectedRegion || isInHoveredRegion ? '1.5' : '0.75'}
-              strokeOpacity={isInSelectedRegion ? '1' : '0.6'}
-              className="cursor-pointer transition-all duration-200"
-              onClick={() => handleStateClick(stateName)}
-              onMouseEnter={() => handleStateHover(stateName)}
-              onMouseLeave={handleStateLeave}
-            />
-          );
-        })}
-      </svg>
-
-      {/* Tooltip */}
-      {hoveredState && (
-        <div
-          className={`absolute pointer-events-none z-50 px-3 py-2.5 rounded-lg shadow-lg border ${
-            isDark ? 'bg-popover text-popover-foreground border-border' : 'bg-white text-gray-900 border-gray-200'
-          }`}
-          style={{
-            left: '50%',
-            bottom: '12px',
-            transform: 'translateX(-50%)',
-          }}
+      <div className="relative" onMouseMove={handleMouseMove}>
+        <svg
+          viewBox={mapViewBox}
+          className="w-full h-auto"
+          style={{ maxHeight: '350px' }}
+          preserveAspectRatio="xMidYMid meet"
         >
-          {(() => {
-            const info = getTooltipContent(hoveredState);
+          {/* Background */}
+          <rect
+            x="0"
+            y="0"
+            width="744.24182"
+            height="599.92847"
+            className="fill-card"
+            rx="12"
+          />
+
+          {/* Map paths */}
+          {Object.entries(nigeriaStatePaths).map(([stateName, { d, id }]) => {
+            const region = stateToRegion[stateName];
+            const isInSelectedRegion = selectedRegion === region;
+            const isInHoveredRegion = localSelectionMode === 'region' && hoveredRegion === region;
+
             return (
-              <div className="text-xs space-y-1">
-                {localSelectionMode === 'region' ? (
-                  <>
-                    <div className="font-semibold text-sm">{info.zone} Zone</div>
-                    <div className="text-muted-foreground text-[10px]">{info.region} • {info.state}</div>
-                  </>
-                ) : (
-                  <>
-                    <div className="font-semibold text-sm">{info.state}</div>
-                    <div className="text-muted-foreground text-[10px]">{info.region} • {info.zone} Zone</div>
-                  </>
-                )}
-                {info.sales > 0 && (
-                  <>
-                    <div className="pt-1 border-t border-border">
-                      <span className="text-muted-foreground">Sales: </span>
-                      <span className="font-medium">{formatCurrency(info.sales)}</span>
-                    </div>
-                    <div className={`font-medium ${
-                      info.percentChange > 0 ? 'text-green-500' : info.percentChange < 0 ? 'text-red-500' : 'text-muted-foreground'
-                    }`}>
-                      {info.percentChange > 0 ? '+' : ''}{info.percentChange}% vs last month
-                    </div>
-                  </>
-                )}
-              </div>
+              <path
+                key={id}
+                d={d}
+                fill={getStateColor(stateName)}
+                stroke="hsl(var(--card))"
+                strokeWidth={isInSelectedRegion || isInHoveredRegion ? '1.5' : '0.75'}
+                strokeOpacity={isInSelectedRegion ? '1' : '0.6'}
+                className="cursor-pointer transition-all duration-200"
+                onClick={() => handleStateClick(stateName)}
+                onMouseEnter={(e) => handleStateHover(stateName, e)}
+                onMouseLeave={handleStateLeave}
+              />
             );
-          })()}
-        </div>
-      )}
+          })}
+        </svg>
+
+        {/* Tooltip */}
+        {hoveredState && (
+          <div
+            className={`absolute pointer-events-none z-50 px-3 py-2.5 rounded-lg shadow-lg border ${
+              isDark ? 'bg-popover text-popover-foreground border-border' : 'bg-white text-gray-900 border-gray-200'
+            }`}
+            style={{
+              left: mousePosition.x + 15,
+              top: mousePosition.y - 10,
+              transform: 'translateY(-100%)',
+            }}
+          >
+            {(() => {
+              const info = getTooltipContent(hoveredState);
+              return (
+                <div className="text-xs space-y-1">
+                  {localSelectionMode === 'region' ? (
+                    <>
+                      <div className="font-semibold text-sm">{info.zone} Zone</div>
+                      <div className="text-muted-foreground text-[10px]">{info.region} • {info.state}</div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="font-semibold text-sm">{info.state}</div>
+                      <div className="text-muted-foreground text-[10px]">{info.region} • {info.zone} Zone</div>
+                    </>
+                  )}
+                  {info.sales > 0 && (
+                    <>
+                      <div className="pt-1 border-t border-border">
+                        <span className="text-muted-foreground">Sales: </span>
+                        <span className="font-medium">{formatCurrency(info.sales)}</span>
+                      </div>
+                      <div className={`font-medium ${
+                        info.percentChange > 0 ? 'text-green-500' : info.percentChange < 0 ? 'text-red-500' : 'text-muted-foreground'
+                      }`}>
+                        {info.percentChange > 0 ? '+' : ''}{info.percentChange}% vs last month
+                      </div>
+                    </>
+                  )}
+                </div>
+              );
+            })()}
+          </div>
+        )}
+      </div>
 
       {/* Performance Legend */}
       <div className={`mt-3 pt-3 border-t border-border`}>
