@@ -8,6 +8,7 @@ import { AppSidebar } from '@/components/layout/AppSidebar';
 import CommandMenu from '@/components/layout/CommandMenu';
 import Dashboard from '@/features/dashboard';
 import Brands from '@/features/brands';
+import BrandDetail from '@/features/brands/BrandDetail';
 import Trends from '@/features/trends';
 import UploadData from '@/features/upload';
 import ProfileSettings from '@/features/settings/profile';
@@ -25,6 +26,7 @@ function AppContent() {
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/brands" element={<Brands />} />
+          <Route path="/brands/:brandId" element={<BrandDetail />} />
           <Route path="/trends" element={<Trends />} />
           <Route path="/upload" element={<UploadData />} />
           <Route path="/settings/profile" element={<ProfileSettings />} />

@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis, Line, LineChart, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { Header } from '@/components/layout/Header';
 import { Main } from '@/components/layout/Main';
@@ -17,6 +18,7 @@ import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 export default function Trends() {
+  const navigate = useNavigate();
   const [regionData] = useState(() => generateRegionSalesData());
 
   // Generate monthly trend data for each brand
@@ -177,7 +179,11 @@ export default function Trends() {
         {/* Individual Brand Trends */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {brandTrendData.map((brand) => (
-            <Card key={brand.id}>
+            <Card
+              key={brand.id}
+              className="cursor-pointer transition-all hover:shadow-lg hover:border-primary/50"
+              onClick={() => navigate(`/brands/${brand.id}`)}
+            >
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">

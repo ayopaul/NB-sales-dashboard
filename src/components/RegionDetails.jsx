@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { X, TrendingUp, TrendingDown, Minus, MapPin, Target, BarChart3 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { formatCurrency, brands, zones, regionStates } from '../data/salesData';
@@ -14,8 +15,9 @@ import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 
-const RegionDetails = ({ region, regionData, open, onOpenChange }) => {
+const RegionDetails = ({ region, regionData, stateData, open, onOpenChange, onStateSelect }) => {
   const { isDark } = useTheme();
+  const [selectedState, setSelectedState] = useState(null);
 
   if (!region || !regionData) return null;
 
@@ -26,6 +28,19 @@ const RegionDetails = ({ region, regionData, open, onOpenChange }) => {
   const states = regionStates[region] || [];
   const TrendIcon = data.trend === 'up' ? TrendingUp : data.trend === 'down' ? TrendingDown : Minus;
   const trendColor = data.trend === 'up' ? 'text-green-500' : data.trend === 'down' ? 'text-red-500' : 'text-muted-foreground';
+
+  const handleStateClick = (state) => {
+    setSelectedState(selectedState === state ? null : state);
+    if (onStateSelect) {
+      onStateSelect(state);
+    }
+  };
+
+  // Get state-specific data
+  const getStateData = (stateName) => {
+    if (!stateData || !stateData[stateName]) return null;
+    return stateData[stateName];
+  };
 
   // Get performance color based on percent change
   const getPerformanceBadge = (percentChange) => {
@@ -131,14 +146,86 @@ const RegionDetails = ({ region, regionData, open, onOpenChange }) => {
 
             {/* States in Region */}
             <div className="rounded-xl border bg-card p-4">
-              <h3 className="text-sm font-semibold mb-3">States in {region}</h3>
+              <h3 className="text-sm font-semibold mb-3">States in {zone?.name} Zone</h3>
               <div className="flex flex-wrap gap-2">
-                {states.map(state => (
-                  <Badge key={state} variant="secondary">
-                    {state}
-                  </Badge>
-                ))}
+                {states.map(state => {
+                  const stateInfo = getStateData(state);
+                  const isSelected = selectedState === state;
+                  return (
+                    <Badge
+                      key={state}
+                      variant={isSelected ? "default" : "secondary"}
+                      className={`cursor-pointer transition-all hover:bg-primary hover:text-primary-foreground ${
+                        isSelected ? 'ring-2 ring-primary ring-offset-2' : ''
+                      }`}
+                      onClick={() => handleStateClick(state)}
+                    >
+                      {state}
+                    </Badge>
+                  );
+                })}
               </div>
+
+              {/* Selected State Details */}
+              {selectedState && (
+                <div className="mt-4 pt-4 border-t">
+                  <h4 className="text-sm font-semibold mb-3">{selectedState} Details</h4>
+                  {(() => {
+                    const stateInfo = getStateData(selectedState);
+                    if (!stateInfo) {
+                      return <p className="text-sm text-muted-foreground">No data available for {selectedState}</p>;
+                    }
+                    const StateTrendIcon = stateInfo.trend === 'up' ? TrendingUp : stateInfo.trend === 'down' ? TrendingDown : Minus;
+                    const stateTrendColor = stateInfo.trend === 'up' ? 'text-green-500' : stateInfo.trend === 'down' ? 'text-red-500' : 'text-muted-foreground';
+                    return (
+                      <div className="space-y-3">
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="bg-muted/50 rounded-lg p-3">
+                            <p className="text-xs text-muted-foreground">Current Sales</p>
+                            <p className="text-lg font-bold">{formatCurrency(stateInfo.currentSales)}</p>
+                            <div className={`flex items-center gap-1 ${stateTrendColor}`}>
+                              <StateTrendIcon className="w-3 h-3" />
+                              <span className="text-xs font-medium">
+                                {stateInfo.percentChange > 0 ? '+' : ''}{stateInfo.percentChange}%
+                              </span>
+                            </div>
+                          </div>
+                          <div className="bg-muted/50 rounded-lg p-3">
+                            <p className="text-xs text-muted-foreground">Previous Sales</p>
+                            <p className="text-lg font-bold">{formatCurrency(stateInfo.previousSales)}</p>
+                            <p className="text-xs text-muted-foreground">Last period</p>
+                          </div>
+                        </div>
+                        {/* Top brands in state */}
+                        {stateInfo.brandBreakdown && (
+                          <div>
+                            <p className="text-xs text-muted-foreground mb-2">Top Brands in {selectedState}</p>
+                            <div className="space-y-2">
+                              {brands
+                                .map(brand => ({
+                                  ...brand,
+                                  sales: stateInfo.brandBreakdown[brand.id] || 0
+                                }))
+                                .sort((a, b) => b.sales - a.sales)
+                                .slice(0, 3)
+                                .map((brand) => (
+                                  <div key={brand.id} className="flex items-center gap-2">
+                                    <div
+                                      className="w-2 h-2 rounded-full"
+                                      style={{ backgroundColor: brand.color }}
+                                    />
+                                    <span className="flex-1 text-xs">{brand.name}</span>
+                                    <span className="text-xs font-medium">{formatCurrency(brand.sales)}</span>
+                                  </div>
+                                ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
             </div>
 
             {/* Top Brands */}

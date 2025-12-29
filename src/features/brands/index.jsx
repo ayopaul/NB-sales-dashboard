@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Header } from '@/components/layout/Header';
 import { Main } from '@/components/layout/Main';
 import { Search } from '@/components/layout/Search';
@@ -13,9 +14,10 @@ import {
   formatCurrency,
   zones,
 } from '@/data/salesData';
-import { TrendingUp, TrendingDown, Minus, Package } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus, Package, ChevronRight } from 'lucide-react';
 
 export default function Brands() {
+  const navigate = useNavigate();
   const [regionData] = useState(() => generateRegionSalesData());
 
   // Calculate brand totals across all regions
@@ -151,7 +153,11 @@ export default function Brands() {
             const marketShare = ((brand.currentSales / totalVolume) * 100).toFixed(1);
 
             return (
-              <Card key={brand.id} className="overflow-hidden">
+              <Card
+                key={brand.id}
+                className="overflow-hidden cursor-pointer transition-all hover:shadow-lg hover:border-primary/50"
+                onClick={() => navigate(`/brands/${brand.id}`)}
+              >
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
@@ -204,6 +210,11 @@ export default function Brands() {
                           );
                         })}
                     </div>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-3 mt-3 border-t text-sm text-primary">
+                    <span>View details</span>
+                    <ChevronRight className="w-4 h-4" />
                   </div>
                 </CardContent>
               </Card>

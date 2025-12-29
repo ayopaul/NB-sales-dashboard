@@ -1,6 +1,55 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { nigeriaStatePaths, mapViewBox } from '../data/nigeriaMapData';
 import { zones, regionStates, formatCurrency } from '../data/salesData';
+
+// State abbreviations
+const stateAbbreviations = {
+  'Lagos': 'LA',
+  'Ogun': 'OG',
+  'Oyo': 'OY',
+  'Osun': 'OS',
+  'Ekiti': 'EK',
+  'Ondo': 'ON',
+  'Edo': 'ED',
+  'Delta': 'DE',
+  'Bayelsa': 'BY',
+  'Rivers': 'RV',
+  'Akwa Ibom': 'AK',
+  'Cross River': 'CR',
+  'Abia': 'AB',
+  'Imo': 'IM',
+  'Anambra': 'AN',
+  'Enugu': 'EN',
+  'Ebonyi': 'EB',
+  'Benue': 'BE',
+  'Kogi': 'KG',
+  'Kwara': 'KW',
+  'Niger': 'NI',
+  'FCT': 'FC',
+  'Nasarawa': 'NA',
+  'Plateau': 'PL',
+  'Taraba': 'TR',
+  'Adamawa': 'AD',
+  'Gombe': 'GO',
+  'Bauchi': 'BA',
+  'Borno': 'BO',
+  'Yobe': 'YO',
+  'Jigawa': 'JI',
+  'Kano': 'KN',
+  'Kaduna': 'KD',
+  'Katsina': 'KT',
+  'Zamfara': 'ZA',
+  'Sokoto': 'SO',
+  'Kebbi': 'KB',
+};
+
+// Manual position offsets for specific states
+const labelOffsets = {
+  'Kebbi': { x: -25, y: 0 },
+  'Katsina': { x: -20, y: 0 },
+  'Ondo': { x: -18, y: 0 },
+  'Bauchi': { x: 0, y: 15 },
+};
 
 // State to region mapping
 const stateToRegion = {};
@@ -58,12 +107,44 @@ const NigeriaMap = ({
   selectedRegion,
   selectedState,
   isDark,
-  selectionMode = 'region' // 'region' or 'state'
+  selectionMode = 'region', // 'region' or 'state'
+  showLabels = true, // Show state abbreviations
 }) => {
   const [hoveredState, setHoveredState] = useState(null);
   const [hoveredRegion, setHoveredRegion] = useState(null);
   const [localSelectionMode, setLocalSelectionMode] = useState(selectionMode);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [labelPositions, setLabelPositions] = useState({});
+  const pathRefs = useRef({});
+  const svgRef = useRef(null);
+
+  // Calculate label positions from path bounding boxes after render
+  useEffect(() => {
+    if (!showLabels) return;
+
+    const calculatePositions = () => {
+      const positions = {};
+      Object.keys(pathRefs.current).forEach(stateName => {
+        const pathElement = pathRefs.current[stateName];
+        if (pathElement) {
+          try {
+            const bbox = pathElement.getBBox();
+            positions[stateName] = {
+              x: bbox.x + bbox.width / 2,
+              y: bbox.y + bbox.height / 2
+            };
+          } catch (e) {
+            // getBBox may fail if element is not rendered
+          }
+        }
+      });
+      setLabelPositions(positions);
+    };
+
+    // Small delay to ensure paths are rendered
+    const timer = setTimeout(calculatePositions, 100);
+    return () => clearTimeout(timer);
+  }, [showLabels]);
 
   // Calculate max sales for opacity scaling
   const maxSales = useMemo(() => {
@@ -80,7 +161,6 @@ const NigeriaMap = ({
 
     // Get performance-based color
     const baseColor = getPerformanceColor(salesData.percentChange, isDark);
-    const opacity = getSalesOpacity(salesData.currentSales, maxSales);
 
     // Highlight selected state
     if (selectedState === state) {
@@ -229,6 +309,7 @@ const NigeriaMap = ({
 
       <div className="relative" onMouseMove={handleMouseMove}>
         <svg
+          ref={svgRef}
           viewBox={mapViewBox}
           className="w-full h-auto"
           style={{ maxHeight: '350px' }}
@@ -249,22 +330,58 @@ const NigeriaMap = ({
             const region = stateToRegion[stateName];
             const isInSelectedRegion = selectedRegion === region;
             const isInHoveredRegion = localSelectionMode === 'region' && hoveredRegion === region;
+            const isHovered = hoveredState === stateName;
 
             return (
               <path
                 key={id}
+                ref={el => { pathRefs.current[stateName] = el; }}
                 d={d}
                 fill={getStateColor(stateName)}
                 stroke="hsl(var(--card))"
-                strokeWidth={isInSelectedRegion || isInHoveredRegion ? '1.5' : '0.75'}
-                strokeOpacity={isInSelectedRegion ? '1' : '0.6'}
-                className="cursor-pointer transition-all duration-200"
+                strokeWidth="0.5"
+                strokeOpacity="0.4"
+                className="cursor-pointer transition-all duration-150"
+                style={{
+                  filter: isHovered || isInHoveredRegion ? 'brightness(0.85)' : 'none',
+                }}
                 onClick={() => handleStateClick(stateName)}
                 onMouseEnter={(e) => handleStateHover(stateName, e)}
                 onMouseLeave={handleStateLeave}
               />
             );
           })}
+
+          {/* State abbreviation labels - positioned at path centers using getBBox */}
+          {showLabels && (
+            <g className="state-labels" style={{ pointerEvents: 'none' }}>
+              {Object.entries(nigeriaStatePaths).map(([stateName, { id }]) => {
+                const abbr = stateAbbreviations[stateName];
+                const pos = labelPositions[stateName];
+                if (!abbr || !pos) return null;
+
+                const offset = labelOffsets[stateName] || { x: 0, y: 0 };
+                const isStateHovered = hoveredState === stateName ||
+                  (localSelectionMode === 'region' && hoveredRegion === stateToRegion[stateName]);
+
+                return (
+                  <text
+                    key={`label-${id}`}
+                    x={pos.x + offset.x}
+                    y={pos.y + offset.y}
+                    textAnchor="middle"
+                    dominantBaseline="central"
+                    fontSize="15"
+                    fontWeight="800"
+                    fill={isStateHovered ? "rgba(0, 0, 0, 0.7)" : "rgba(255, 255, 255, 0.8)"}
+                    className="transition-all duration-150"
+                  >
+                    {abbr}
+                  </text>
+                );
+              })}
+            </g>
+          )}
         </svg>
 
         {/* Tooltip */}

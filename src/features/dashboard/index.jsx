@@ -298,8 +298,10 @@ export default function Dashboard() {
       <RegionDetails
         region={selectedRegion}
         regionData={regionData}
+        stateData={stateData}
         open={showRegionDetails}
         onOpenChange={setShowRegionDetails}
+        onStateSelect={handleStateSelect}
       />
     </>
   );
